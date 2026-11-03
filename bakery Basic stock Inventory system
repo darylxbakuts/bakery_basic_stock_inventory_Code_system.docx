@@ -1,0 +1,429 @@
+# ==========================================
+#       BAKERY BASIC STOCK INVENTORY SYSTEM
+# ==========================================
+ 
+# AUTHORIZED USERS
+AUTHORIZED_USERS = {
+    "owner": {"password": "owner123", "role": "Owner"},
+    "staff": {"password": "staff123", "role": "Staff"}
+}
+ 
+# MASTER DATA STORAGE
+inventory = []
+ 
+# VALIDATION LISTS
+ALLOWED_PRODUCTS = [
+    "flour", "all-purpose flour", "bread flour", "cake flour",
+    "sugar", "white sugar", "brown sugar", "powdered sugar",
+    "milk", "fresh milk", "evaporated milk", "condensed milk",
+    "eggs", "fresh eggs", "butter", "margarine",
+    "yeast", "baking powder", "baking soda",
+    "vanilla", "cocoa powder", "chocolate",
+    "oil", "vegetable oil", "packaging", "boxes", "bags", "labels"
+]
+ 
+# CATEGORY-SPECIFIC BRANDS
+BRANDS_FLOUR = [
+    "maya", "philmills", "golden prize",
+    "king arthur", "baker's choice"
+]
+ 
+BRANDS_SUGAR = [
+    "central azucarera", "united sugar",
+    "davao sugar", "cagayan sugar", "fil-sugar"
+]
+ 
+BRANDS_CONDENSED_MILK = [
+    "nestle", "carnation", "alaska",
+    "magnolia", "dutch lady"
+]
+ 
+BRANDS_BUTTER = [
+    "magnolia", "alaska", "anchor",
+    "emborg", "golden churn"
+]
+ 
+ALLOWED_BRANDS = (
+    BRANDS_FLOUR + BRANDS_SUGAR +
+    BRANDS_CONDENSED_MILK + BRANDS_BUTTER
+)
+ 
+ALLOWED_CATEGORIES = [
+    "flour", "sugar", "dairy", "eggs",
+    "fats", "leavening", "flavoring",
+    "packaging", "other"
+]
+ 
+ALLOWED_UNITS = [
+    "kg", "g", "l", "ml", "pcs", "pack", "box"
+]
+ 
+ 
+# ==========================================
+#             HELPER FUNCTIONS
+# ==========================================
+ 
+def press_enter_to_continue():
+    input("\nPress Enter to continue...")
+ 
+ 
+def confirm_proceed():
+    while True:
+        ans = input("Proceed? (1=Yes | 2=No): ").strip()
+ 
+        if ans == "1":
+            return True
+        elif ans == "2":
+            return False
+        else:
+            print("Invalid! Enter only 1 or 2.")
+ 
+ 
+def get_valid_number(prompt):
+    while True:
+        try:
+            num = float(input(prompt).strip())
+ 
+            if num > 0:
+                return num
+ 
+            print("Value must be greater than 0.")
+ 
+        except ValueError:
+            print("Enter a valid number only.")
+ 
+ 
+def display_options_and_select(prompt, options):
+    while True:
+        print()
+ 
+        for idx, item in enumerate(options, 1):
+            print(f"{idx}. {item.title()}")
+ 
+        choice = input(f"\n{prompt}: ").strip()
+ 
+        if choice.isdigit():
+            pos = int(choice) - 1
+ 
+            if 0 <= pos < len(options):
+                return options[pos]
+ 
+        print("Invalid selection! Choose from the list.")
+ 
+ 
+def get_valid_product():
+    return display_options_and_select(
+        "Enter product number", ALLOWED_PRODUCTS
+    )
+ 
+ 
+def get_brand_for_product(product_name):
+    product = product_name.lower()
+ 
+    if "flour" in product:
+        brands = BRANDS_FLOUR
+ 
+    elif "sugar" in product:
+        brands = BRANDS_SUGAR
+ 
+    elif "condensed milk" in product:
+        brands = BRANDS_CONDENSED_MILK
+ 
+    elif "butter" in product:
+        brands = BRANDS_BUTTER
+ 
+    elif "milk" in product:
+        brands = BRANDS_CONDENSED_MILK
+ 
+    else:
+        brands = ALLOWED_BRANDS
+ 
+    return display_options_and_select(
+        "Select brand number", brands
+    )
+ 
+ 
+def get_valid_category():
+    return display_options_and_select(
+        "Enter category number", ALLOWED_CATEGORIES
+    )
+ 
+ 
+def get_valid_unit():
+    return display_options_and_select(
+        "Enter unit number", ALLOWED_UNITS
+    )
+ 
+ 
+# ==========================================
+#                LOGIN SYSTEM
+# ==========================================
+ 
+def login():
+    print("\n" + "=" * 50)
+    print("       BAKERY INVENTORY SYSTEM - LOGIN")
+    print("=" * 50)
+    print("Authorized Personnel Only\n")
+ 
+    attempts_left = 3
+ 
+    while attempts_left > 0:
+ 
+        print(f"Attempts remaining: {attempts_left}")
+ 
+        username = input("Username: ").strip().lower()
+        password = input("Password: ").strip()
+ 
+        if (
+            username in AUTHORIZED_USERS
+            and AUTHORIZED_USERS[username]["password"] == password
+        ):
+ 
+            role = AUTHORIZED_USERS[username]["role"]
+ 
+            print(f"\nWelcome, {role}!")
+            print("Verifying access...")
+ 
+            if confirm_proceed():
+                print("Access Granted - System Ready!")
+                return role
+ 
+            print("Login cancelled.")
+            return None
+ 
+        else:
+            attempts_left -= 1
+            print("Incorrect username or password!\n")
+ 
+    print("Maximum login attempts reached.")
+    return None
+ 
+ 
+# ==========================================
+#              ADD INVENTORY
+# ==========================================
+ 
+def add_item():
+ 
+    while True:
+ 
+        print("\n========== ADD INVENTORY ==========")
+ 
+        product = get_valid_product()
+        brand = get_brand_for_product(product)
+        category = get_valid_category()
+        quantity = get_valid_number("Enter quantity: ")
+        unit = get_valid_unit()
+ 
+        item = {
+            "product": product,
+            "brand": brand,
+            "category": category,
+            "quantity": quantity,
+            "unit": unit
+        }
+ 
+        inventory.append(item)
+ 
+        print("\nItem successfully added!")
+ 
+        if not confirm_proceed():
+            break
+ 
+ 
+# ==========================================
+#             VIEW INVENTORY
+# ==========================================
+ 
+def view_inventory():
+ 
+    print("\n========== BAKERY INVENTORY ==========")
+ 
+    if not inventory:
+        print("Inventory is empty!")
+        return
+ 
+    for index, item in enumerate(inventory, 1):
+ 
+        print(f"\nItem Number: {index}")
+        print(f"Product: {item['product'].title()}")
+        print(f"Brand: {item['brand'].title()}")
+        print(f"Category: {item['category'].title()}")
+        print(f"Quantity: {item['quantity']:g}")
+        print(f"Unit: {item['unit']}")
+ 
+ 
+# ==========================================
+#             SEARCH INVENTORY
+# ==========================================
+ 
+def search_item():
+ 
+    print("\n========== SEARCH INVENTORY ==========")
+ 
+    keyword = input("Enter product name: ").strip().lower()
+ 
+    found = False
+ 
+    for item in inventory:
+ 
+        if (
+            keyword in item["product"].lower()
+            or keyword in item["brand"].lower()
+        ):
+ 
+            print("\nItem Found!")
+            print(f"Product: {item['product']}")
+            print(f"Brand: {item['brand']}")
+            print(f"Category: {item['category']}")
+            print(f"Quantity: {item['quantity']:g} {item['unit']}")
+ 
+            found = True
+ 
+    if not found:
+        print("No matching item found.")
+ 
+ 
+# ==========================================
+#             UPDATE INVENTORY
+# ==========================================
+ 
+def update_item():
+ 
+    view_inventory()
+ 
+    if not inventory:
+        return
+ 
+    try:
+        number = int(input("\nEnter item number to update: "))
+ 
+        if 1 <= number <= len(inventory):
+ 
+            item = inventory[number - 1]
+ 
+            print("\n1. Update Quantity")
+            print("2. Update Category")
+            print("3. Update Unit")
+ 
+            choice = input("Choose option: ").strip()
+ 
+            if choice == "1":
+                item["quantity"] = get_valid_number(
+                    "Enter new quantity: "
+                )
+ 
+            elif choice == "2":
+                item["category"] = get_valid_category()
+ 
+            elif choice == "3":
+                item["unit"] = get_valid_unit()
+ 
+            else:
+                print("Invalid selection.")
+                return
+ 
+            print("Inventory successfully updated!")
+ 
+        else:
+            print("Invalid item number.")
+ 
+    except ValueError:
+        print("Enter a valid number.")
+ 
+ 
+# ==========================================
+#             DELETE INVENTORY
+# ==========================================
+ 
+def delete_item():
+ 
+    view_inventory()
+ 
+    if not inventory:
+        return
+ 
+    try:
+        number = int(input("\nEnter item number to delete: "))
+ 
+        if 1 <= number <= len(inventory):
+ 
+            if confirm_proceed():
+ 
+                inventory.pop(number - 1)
+                print("Item successfully deleted!")
+ 
+            else:
+                print("Deletion cancelled.")
+ 
+        else:
+            print("Invalid item number.")
+ 
+    except ValueError:
+        print("Enter a valid number.")
+ 
+ 
+# ==========================================
+#               MAIN MENU
+# ==========================================
+ 
+def main_menu(role):
+ 
+    while True:
+ 
+        print("\n" + "=" * 45)
+        print("       BAKERY BASIC STOCK INVENTORY")
+        print("=" * 45)
+ 
+        print(f"Logged in as: {role}")
+ 
+        print("\n1. Add Inventory")
+        print("2. View Inventory")
+        print("3. Search Inventory")
+        print("4. Update Inventory")
+ 
+        if role == "Owner":
+            print("5. Delete Inventory")
+ 
+        print("6. Logout")
+ 
+        choice = input("\nEnter your choice: ").strip()
+ 
+        if choice == "1":
+            add_item()
+ 
+        elif choice == "2":
+            view_inventory()
+ 
+        elif choice == "3":
+            search_item()
+ 
+        elif choice == "4":
+            update_item()
+ 
+        elif choice == "5" and role == "Owner":
+            delete_item()
+ 
+        elif choice == "6":
+            print("\nLogging out...")
+            break
+ 
+        else:
+            print("Invalid choice! Please try again.")
+ 
+ 
+# ==========================================
+#             RUN THE SYSTEM
+# ==========================================
+ 
+def main():
+ 
+    role = login()
+ 
+    if role:
+        main_menu(role)
+ 
+    print("\nThank you for using Bakery Inventory System!")
+ 
+ 
+main()
